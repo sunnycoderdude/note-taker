@@ -29,6 +29,13 @@ app.get("/notes", function(req, res) {
 
 //create API routes 
 
+app.get("/api/notes", function(req, res) {
+    fs.readfile("journal.json", "utf8", function(err, notes) {
+        if (err) throw err;
+        res.json(JSON.parse(notes))
+    });
+});
+
 // app.get("/api/reservations", function(req, res){
 //     fs.readFile("reservations.json", "utf8", function(err, reservations){
 //         if (err) throw err;

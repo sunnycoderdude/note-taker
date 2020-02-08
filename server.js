@@ -17,69 +17,57 @@ app.use(express.static("public"));
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
-// Basic route that sends the user first to the AJAX Page
-app.get("*", function(req, res) {
-    res.sendFile(path.join(__dirname, "public/index.html"));
-  });
-  
-app.get("/notes", function(req, res) {
-    res.sendFile(path.join(__dirname, "public/notes.html"));
-    console.log(__dirname);
-});
 
-//create API routes 
+// API routes
 
-app.get("/api/notes", function(req, res) {
-    fs.readfile("journal.json", "utf8", function(err, notes) {
-        if (err) throw err;
+app.get("/api/notes", function(req, res){
+    fs.readFile("db/db.json", "utf8", function(err, notes){
+        if(err) throw err;
+        console.log(typeof notes)
         res.json(JSON.parse(notes))
-    });
+    })
 });
 
-// app.get("/api/reservations", function(req, res){
-//     fs.readFile("reservations.json", "utf8", function(err, reservations){
-//         if (err) throw err;
-//         res.json(JSON.parse(reservations))
-//     })
-// })
+app.post("/api/notes", async function(req, res){
+  let newNote = req.body;
+  console.log(newNote);
+    try {
+      let notes = await readFileAsync("db/db.json", "utf8");
+      notes = JSON.parse(notes);
+      notes.push(newNote);
+      
+      for (let i = 0; i < notes.length; i++){
+        notes[i].id= i + 1;
+      }      
+        await writeFileAsync("db/db.json", JSON.stringify(notes, null, 2));
 
-// app.get("/api/waitlist", function(req, res){
-//     fs.readFile("waitlist.json", "utf8", function(err, waitlist){
-//         if (err) throw err;
-//         res.json(JSON.parse(waitlist))
-//     })
-// })
-  
-// app.post("/api/reservations", async function (req, res){
-//   let newReservation = req.body;
-//   try{
-//     let reservations = await readFileAsync ("reservations.json", "utf8");
-//     reservations = JSON.parse(reservations);
-//     if (reservations.length >= 5){
-//       let waitlist = await readFileAsync ("waitlist.json", "utf8"); 
-//       waitlist = JSON.parse(waitlist);
-//       newReservationArray= waitlist.push(newReservation);
-        
-//       await writeFileAsync("waitlist.json", JSON.stringify(waitlist));
-//       res.json(newReservation);
+        res.json(newNote);
+    } catch(err){
+        //errors
+    }
+})
 
-//     }
-//     else {
-//       newReservationArray= reservations.push(newReservation);
-        
-//       await writeFileAsync("reservations.json", JSON.stringify(reservations));
-//       res.json(newReservation);
-//     }
-   
-// } catch (err){
-//     throw(err);
-// }
+app.delete("/api/notes/:id", function(req, res) {
 
-// })
+  const idDelete = parseInt(req.params.id);
+  let database = JSON.parse(fs.readFileSync("./db/db.json", "utf-8"));
+  const filteredArray = database.filter(note => note.id !== idDelete);
+  const stringedDB = JSON.stringify(filteredArray);
+  fs.writeFile("./db/db.json", stringedDB, "utf8", (err, data) => {
+    if (err) throw err;
+    console.log("note has been deleted");
+  });
+  res.json(filteredArray);
+});
 
+// Basic route that sends the user first to the AJAX Page
+app.get("/notes", function(req, res) {
+    res.sendFile(path.join(__dirname, "/public/notes.html"));
+});
 
-
-
+app.get("*", function(req, res) {
+    res.sendFile(path.join(__dirname, "/public/index.html"));
+  });
 
 // Starts the server to begin listening
 // =============================================================

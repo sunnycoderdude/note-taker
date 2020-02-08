@@ -19,45 +19,43 @@ app.use(express.json());
 
 
 // API routes
-
+// get notes
 app.get("/api/notes", function(req, res){
     fs.readFile("db/db.json", "utf8", function(err, notes){
         if(err) throw err;
-        console.log(typeof notes)
+        console.log(typeof res)
         res.json(JSON.parse(notes))
     })
 });
 
+// post notes
 app.post("/api/notes", async function(req, res){
   let newNote = req.body;
-  console.log(newNote);
     try {
       let notes = await readFileAsync("db/db.json", "utf8");
       notes = JSON.parse(notes);
       notes.push(newNote);
-      
       for (let i = 0; i < notes.length; i++){
         notes[i].id= i + 1;
       }      
         await writeFileAsync("db/db.json", JSON.stringify(notes, null, 2));
-
         res.json(newNote);
     } catch(err){
-        //errors
+        throw err
     }
 })
 
 app.delete("/api/notes/:id", function(req, res) {
 
-  const idDelete = parseInt(req.params.id);
-  let database = JSON.parse(fs.readFileSync("./db/db.json", "utf-8"));
-  const filteredArray = database.filter(note => note.id !== idDelete);
-  const stringedDB = JSON.stringify(filteredArray);
-  fs.writeFile("./db/db.json", stringedDB, "utf8", (err, data) => {
+  let oldNote = parseInt(req.params.id);
+  let notes = JSON.parse(fs.readFileSync("db/db.json", "utf-8"));
+  const newNotes = notes.filter(note => note.id !== oldNote);
+  const notesString = JSON.stringify(newNotes);
+  fs.writeFile("db/db.json", notesString, "utf8", (err, data) => {
     if (err) throw err;
     console.log("note has been deleted");
   });
-  res.json(filteredArray);
+  res.json(newNotes);
 });
 
 // Basic route that sends the user first to the AJAX Page
